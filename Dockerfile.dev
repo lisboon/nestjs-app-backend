@@ -1,0 +1,23 @@
+FROM node:24-bookworm-slim
+
+ENV NODE_ENV=development \
+    PNPM_HOME=/pnpm \
+    PATH=/pnpm:$PATH \
+    HUSKY=0
+
+RUN npm install -g pnpm@11.1.1 \
+  && apt-get update -y \
+  && apt-get install -y --no-install-recommends openssl \
+  && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /app
+
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml prisma.config.ts ./
+COPY prisma/ ./prisma/
+
+RUN pnpm install --frozen-lockfile
+
+# 3001 = API | 5555 = Prisma Studio
+EXPOSE 3001 5555
+
+CMD ["pnpm", "start:dev"]

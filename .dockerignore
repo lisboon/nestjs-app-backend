@@ -1,0 +1,27 @@
+# dependencies & build output
+node_modules
+dist
+generated
+coverage
+
+# vcs & meta
+.git
+.github
+.husky
+.vscode
+.worktree
+docs
+
+# docker
+*Dockerfile*
+*docker-compose*
+.dockerignore
+
+# env & secrets (o runtime recebe env via compose/orquestrador)
+.env
+.env.*
+!.env.example
+
+# misc
+*.log
+*.md
