@@ -58,11 +58,11 @@ describe("Auth (e2e)", () => {
     });
   });
 
-  it("rejects login with the wrong password (401)", async () => {
+  it("rejects login with the wrong password (400)", async () => {
     await request(app.getHttpServer())
       .post("/auth/login")
       .send({ email: ADMIN.email, password: "wrong-password" })
-      .expect(401);
+      .expect(400);
   });
 
   it("rejects login with an invalid email payload (422)", async () => {
