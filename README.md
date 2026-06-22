@@ -1,98 +1,180 @@
 <p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
+  <h1 align="center">Backend API · NestJS + Clean Architecture</h1>
 </p>
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
-
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
+<p align="center">
+  NestJS backend starter built with Domain-Driven Design and Clean Architecture. The business rules stay in plain TypeScript and the framework stays at the edges.
 </p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+
+<p align="center">
+  <img src="https://img.shields.io/badge/NestJS-11-E0234E?logo=nestjs&logoColor=white" alt="NestJS 11" />
+  <img src="https://img.shields.io/badge/TypeScript-5.9-3178C6?logo=typescript&logoColor=white" alt="TypeScript 5.9" />
+  <img src="https://img.shields.io/badge/Prisma-7-2D3748?logo=prisma&logoColor=white" alt="Prisma 7" />
+  <img src="https://img.shields.io/badge/PostgreSQL-16-4169E1?logo=postgresql&logoColor=white" alt="PostgreSQL 16" />
+  <img src="https://img.shields.io/badge/license-MIT-green.svg" alt="License MIT" />
+</p>
+
+<p align="center">
+  <strong>English</strong> · <a href="./README.pt-BR.md">Português</a>
+</p>
 
 ## Description
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+NestJS backend built with DDD and Clean Architecture. The domain layer doesn't depend on Nest, Prisma or HTTP: the business rules are plain TypeScript classes and the framework stays at the boundary. Controllers, guards, the Prisma adapter and the JWT/bcrypt implementations are all infrastructure plugged into interfaces (ports).
+
+For now the code implements the User and Auth domains. They work as a reference for how the other modules should be built. The infrastructure (CI, Docker, migrations, validation, linting, commit hooks) is already set up, so adding a new domain doesn't mean redoing the foundation.
+
+## Architecture
+
+The code is split into a framework-agnostic core and an infrastructure shell.
+
+```
+src/
+├── modules/                # application core (no framework imports)
+│   ├── @shared/            # base entity & value objects, domain errors,
+│   │                       # events, validation (Notification), repository
+│   │                       # abstractions, transaction manager interface
+│   └── user/
+│       ├── domain/         # User entity + validators
+│       ├── usecase/        # one class per use case (login, create, update,
+│       │                   # delete, find, change-password, validate-session)
+│       ├── gateway/        # repository interface (the port)
+│       ├── repository/     # Prisma adapter + query builder
+│       ├── facade/         # module entry point
+│       └── factory/        # dependency wiring
+└── infra/                  # the framework lives here
+    ├── http/               # Nest bootstrap, controllers, guards, filters
+    ├── database/           # Prisma client + transaction manager
+    └── services/           # bcrypt and JWT implementations
+```
+
+Some decisions behind the structure:
+
+- The domain layer never imports Nest or Prisma. The PR template checks for it, so it isn't left to good intentions. That keeps the business logic easy to test on its own and the framework replaceable.
+- Validation runs through a `Notification` object instead of throwing on the first error, so an entity can report every invalid field at once.
+- Each use case is a single class behind an interface, composed by a facade and wired in a factory, which keeps the controllers thin.
+- Auth is strict on purpose. Session validation reads the role from the database instead of trusting the token, changing a password invalidates tokens issued before the change (`tokenValidAfter`), and the login route has a tighter rate limit than the rest.
+
+## Stack
+
+- **Runtime:** Node.js 24, pnpm
+- **Framework:** NestJS 11, TypeScript 5.9 (built with SWC)
+- **Database:** PostgreSQL 16 via Prisma 7 (`@prisma/adapter-pg`)
+- **Auth & security:** JWT (HS256), bcrypt, Helmet, `@nestjs/throttler`, CORS allowlist
+- **Validation:** class-validator / class-transformer
+- **Docs:** Swagger (OpenAPI)
+- **Tests:** Jest 30, Supertest (unit + e2e)
+- **Tooling:** ESLint 9 (flat config) + Prettier, Husky, commitlint, lint-staged, Dependabot, GitHub Actions, Docker
+
+## Prerequisites
+
+- Node.js 24 (an `.nvmrc` is provided, run `nvm use`)
+- pnpm
+- PostgreSQL 16, or Docker if you'd rather not install it locally
 
 ## Project setup
 
 ```bash
-$ pnpm install
+pnpm install
+cp .env.example .env   # then fill in the values
+```
+
+Generate the Prisma client and apply the migrations:
+
+```bash
+pnpm prisma:generate
+pnpm prisma:migrate
+```
+
+Seed the first admin user (uses the `SEED_ADMIN_*` variables from your `.env`):
+
+```bash
+pnpm prisma:seed
 ```
 
 ## Compile and run the project
 
 ```bash
-# development
-$ pnpm run start
+# development (watch mode)
+pnpm start:dev
 
-# watch mode
-$ pnpm run start:dev
-
-# production mode
-$ pnpm run start:prod
+# production
+pnpm build
+pnpm start:prod
 ```
+
+The API starts on the port defined by `PORT` (default `3001`).
+
+### With Docker
+
+The compose file brings up the API together with a PostgreSQL container and runs the migrations on startup:
+
+```bash
+docker compose up --build
+```
+
+- API at `http://localhost:3001`
+- Prisma Studio at `http://localhost:5555`
+
+## Environment variables
+
+| Variable              | Description                                              |
+| --------------------- | -------------------------------------------------------- |
+| `NODE_ENV`            | `development`, `test` or `production`                    |
+| `PORT`                | HTTP port (default `3001`)                               |
+| `DATABASE_URL`        | PostgreSQL connection string                             |
+| `CORS_ORIGINS`        | Comma-separated list of allowed origins                  |
+| `JWT_SECRET`          | JWT signing secret (min. 32 chars in non-test envs)      |
+| `JWT_EXPIRES_IN`      | Token lifetime (e.g. `7d`)                               |
+| `BCRYPT_ROUNDS`       | bcrypt cost factor (min. 10)                             |
+| `THROTTLE_LIMIT`      | Default request limit per window                         |
+| `THROTTLE_WINDOW_MS`  | Rate-limit window in milliseconds                        |
+| `SEED_ADMIN_EMAIL`    | Email of the admin created by the seed                   |
+| `SEED_ADMIN_PASSWORD` | Password of the seeded admin                             |
+| `SEED_ADMIN_NAME`     | Display name of the seeded admin                         |
 
 ## Run tests
 
 ```bash
 # unit tests
-$ pnpm run test
+pnpm test
 
-# e2e tests
-$ pnpm run test:e2e
+# e2e tests (requires a running PostgreSQL)
+pnpm test:e2e
 
-# test coverage
-$ pnpm run test:cov
+# coverage
+pnpm test:cov
 ```
+
+Unit tests cover the entities, use cases and guards. The e2e suite exercises the auth and user routes against a real database, including the cases that matter: revoked tokens, protecting the last active admin, and role enforcement.
+
+## API documentation
+
+In non-production environments, Swagger is served at:
+
+```
+http://localhost:3001/api-docs
+```
+
+## Code quality
+
+```bash
+pnpm lint        # ESLint + Prettier
+pnpm typecheck   # tsc --noEmit
+```
+
+Commits follow the [Conventional Commits](https://www.conventionalcommits.org/) spec, enforced by commitlint through a Husky hook, and lint-staged runs ESLint on staged files before each commit. CI runs lint, type-check, build, the full test suite, a Docker build and a Prisma schema-drift check on every push and pull request.
 
 ## Deployment
 
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
-
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
+Build the production image with the multi-stage `Dockerfile` (it compiles, prunes dev dependencies and runs as a non-root user with a healthcheck). On deploy, apply migrations before starting the app:
 
 ```bash
-$ pnpm install -g @nestjs/mau
-$ mau deploy
+pnpm exec prisma migrate deploy
 ```
 
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
-
-## Resources
-
-Check out a few resources that may come in handy when working with NestJS:
-
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
-
-## Support
-
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
-
-## Stay in touch
-
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
+Provide the environment variables through your orchestrator; they're never baked into the image.
 
 ## License
 
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+[MIT](./LICENSE).
