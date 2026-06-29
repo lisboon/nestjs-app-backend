@@ -15,26 +15,29 @@ const EMAILS = {
   adminB: "e2e-users-admin-b@backend.com.br",
   member: "e2e-users-member@backend.com.br",
 };
-
-const seedUser = async (email: string, role: UserRole) => {
-  const user = await prisma.user.create({
-    data: {
-      id: randomUUID(),
-      name: email,
-      email,
-      password: await bcrypt.hash(PASSWORD, 10),
-      role,
-    },
-  });
-  return user.id;
-};
+const COMPANY_SLUG = "e2e-users-company";
 
 describe("Users (e2e)", () => {
   let app: INestApplication<App>;
+  let companyId: string;
   let adminAId: string;
   let adminBId: string;
   let adminAToken: string;
   let memberToken: string;
+
+  const seedUser = async (email: string, role: UserRole) => {
+    const user = await prisma.user.create({
+      data: {
+        id: randomUUID(),
+        name: email,
+        email,
+        password: await bcrypt.hash(PASSWORD, 10),
+        role,
+        companyId,
+      },
+    });
+    return user.id;
+  };
 
   const login = async (email: string): Promise<string> => {
     const res = await request(app.getHttpServer())
@@ -55,6 +58,12 @@ describe("Users (e2e)", () => {
     await prisma.user.deleteMany({
       where: { email: { in: Object.values(EMAILS) } },
     });
+    await prisma.company.deleteMany({ where: { slug: COMPANY_SLUG } });
+
+    const company = await prisma.company.create({
+      data: { id: randomUUID(), name: "E2E Users Company", slug: COMPANY_SLUG },
+    });
+    companyId = company.id;
 
     adminAId = await seedUser(EMAILS.adminA, UserRole.ADMIN);
     adminBId = await seedUser(EMAILS.adminB, UserRole.ADMIN);
@@ -68,6 +77,7 @@ describe("Users (e2e)", () => {
     await prisma.user.deleteMany({
       where: { email: { in: Object.values(EMAILS) } },
     });
+    await prisma.company.deleteMany({ where: { slug: COMPANY_SLUG } });
     await app.close();
     await prisma.$disconnect();
   });

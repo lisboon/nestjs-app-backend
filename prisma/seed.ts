@@ -17,10 +17,22 @@ async function main() {
     );
   }
 
+  const companyName = process.env.SEED_COMPANY_NAME ?? 'Default Company';
+  const companySlug = (process.env.SEED_COMPANY_SLUG ?? 'default')
+    .trim()
+    .toLowerCase();
+
   const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL });
   const prisma = new PrismaClient({ adapter });
 
   try {
+    const company = await prisma.company.upsert({
+      where: { slug: companySlug },
+      update: {},
+      create: { id: randomUUID(), name: companyName, slug: companySlug },
+    });
+    console.log(`Seed: company "${companySlug}" ready.`);
+
     const existing = await prisma.user.findUnique({ where: { email } });
     if (existing) {
       console.log(`Seed: admin "${email}" already exists, nothing to do.`);
@@ -35,6 +47,7 @@ async function main() {
         email,
         password: await bcrypt.hash(password, rounds),
         role: 'ADMIN',
+        companyId: company.id,
       },
     });
     console.log(`Seed: admin "${email}" created.`);

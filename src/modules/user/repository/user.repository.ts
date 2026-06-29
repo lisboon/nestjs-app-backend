@@ -23,6 +23,7 @@ export default class UserRepository implements UserGateway {
       email: data.email,
       password: data.password,
       role: data.role as UserRole,
+      companyId: data.companyId,
       avatarUrl: data.avatarUrl ?? undefined,
       tokenValidAfter: data.tokenValidAfter ?? undefined,
       active: data.active,
@@ -80,6 +81,16 @@ export default class UserRepository implements UserGateway {
     });
   }
 
+  async countActiveByCompany(
+    companyId: string,
+    trx?: TransactionContext,
+  ): Promise<number> {
+    const client = this.getClient(trx);
+    return client.user.count({
+      where: { companyId, active: true, deletedAt: null },
+    });
+  }
+
   async create(user: User, trx?: TransactionContext): Promise<void> {
     const client = this.getClient(trx);
     await client.user.create({
@@ -89,6 +100,7 @@ export default class UserRepository implements UserGateway {
         email: user.email,
         password: user.password,
         role: user.role,
+        companyId: user.companyId,
         avatarUrl: user.avatarUrl,
         active: user.active,
         createdAt: user.createdAt,

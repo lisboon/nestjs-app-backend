@@ -9,6 +9,10 @@ export interface UserGateway {
   findByEmail(email: string): Promise<User | null>;
   search(params: SearchParams<UserFilter>): Promise<SearchResult<User>>;
   countActiveAdmins(trx?: TransactionContext): Promise<number>;
+  countActiveByCompany(
+    companyId: string,
+    trx?: TransactionContext,
+  ): Promise<number>;
   create(user: User, trx?: TransactionContext): Promise<void>;
   update(user: User, trx?: TransactionContext): Promise<void>;
 }

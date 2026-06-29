@@ -25,10 +25,29 @@ model User {
   avatarUrl       String?   @map("avatar_url")
   active          Boolean   @default(true)
   tokenValidAfter DateTime? @map("token_valid_after")
+  companyId       String    @map("company_id")
   createdAt       DateTime  @default(now()) @map("created_at")
   updatedAt       DateTime  @updatedAt @map("updated_at")
   deletedAt       DateTime? @map("deleted_at")
 
+  company Company @relation(fields: [companyId], references: [id])
+
   @@index([role, active])
+  @@index([companyId])
   @@map("users")
+}
+
+model Company {
+  id        String    @id @default(uuid())
+  name      String
+  slug      String    @unique
+  active    Boolean   @default(true)
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+  deletedAt DateTime? @map("deleted_at")
+
+  users User[]
+
+  @@index([active])
+  @@map("companies")
 }

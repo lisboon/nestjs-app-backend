@@ -55,6 +55,7 @@ export interface FindAllUsersUseCaseOutputDto {
     name: string;
     email: string;
     role: UserRole;
+    companyId: string;
     avatarUrl?: string;
     active: boolean;
     createdAt: Date;

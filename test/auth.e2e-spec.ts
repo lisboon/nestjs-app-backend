@@ -14,9 +14,11 @@ const ADMIN = {
   password: "Sup3rSecret!",
   name: "E2E Auth Admin",
 };
+const COMPANY_SLUG = "e2e-auth-company";
 
 describe("Auth (e2e)", () => {
   let app: INestApplication<App>;
+  let companyId: string;
 
   beforeAll(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
@@ -28,6 +30,13 @@ describe("Auth (e2e)", () => {
     await app.init();
 
     await prisma.user.deleteMany({ where: { email: ADMIN.email } });
+    await prisma.company.deleteMany({ where: { slug: COMPANY_SLUG } });
+
+    const company = await prisma.company.create({
+      data: { id: randomUUID(), name: "E2E Auth Company", slug: COMPANY_SLUG },
+    });
+    companyId = company.id;
+
     await prisma.user.create({
       data: {
         id: randomUUID(),
@@ -35,12 +44,14 @@ describe("Auth (e2e)", () => {
         email: ADMIN.email,
         password: await bcrypt.hash(ADMIN.password, 10),
         role: UserRole.ADMIN,
+        companyId,
       },
     });
   });
 
   afterAll(async () => {
     await prisma.user.deleteMany({ where: { email: ADMIN.email } });
+    await prisma.company.deleteMany({ where: { slug: COMPANY_SLUG } });
     await app.close();
     await prisma.$disconnect();
   });

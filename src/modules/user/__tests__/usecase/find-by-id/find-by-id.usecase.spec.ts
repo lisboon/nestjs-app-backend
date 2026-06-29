@@ -9,6 +9,7 @@ const makeSut = () => {
     email: "maria@backend.com.br",
     password: "$2b$12$hashedpassword",
     role: UserRole.VIEWER,
+    companyId: "c0000000-0000-4000-8000-000000000000",
   });
   const userGateway = {
     findById: jest.fn().mockResolvedValue(user),

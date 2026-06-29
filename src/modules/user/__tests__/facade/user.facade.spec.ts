@@ -8,6 +8,7 @@ const makeSut = () => {
     email: "maria@backend.com.br",
     password: "$2b$12$hash",
     role: UserRole.ADMIN,
+    companyId: "c0000000-0000-4000-8000-000000000000",
   });
 
   const loginOutput = {

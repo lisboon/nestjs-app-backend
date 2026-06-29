@@ -5,6 +5,7 @@ import { AppController } from "./app.controller";
 import { AppService } from "./app.service";
 import { AuthModule } from "./auth/auth.module";
 import { UserModule } from "./user/user.module";
+import { CompanyModule } from "./company/company.module";
 
 @Module({
   imports: [
@@ -19,6 +20,7 @@ import { UserModule } from "./user/user.module";
     }),
     AuthModule,
     UserModule,
+    CompanyModule,
   ],
   controllers: [AppController],
   providers: [AppService, { provide: APP_GUARD, useClass: ThrottlerGuard }],

@@ -10,6 +10,7 @@ export interface UserProps {
   email: string;
   password: string;
   role: UserRole;
+  companyId: string;
   avatarUrl?: string;
   tokenValidAfter?: Date;
   active?: boolean;
@@ -23,6 +24,7 @@ export class User extends BaseEntity {
   private _email: string;
   private _password: string;
   private _role: UserRole;
+  private _companyId: string;
   private _avatarUrl?: string;
   private _tokenValidAfter?: Date;
 
@@ -38,6 +40,7 @@ export class User extends BaseEntity {
     this._email = normalizeEmail(props.email);
     this._password = props.password;
     this._role = props.role;
+    this._companyId = props.companyId;
     this._avatarUrl = props.avatarUrl;
     this._tokenValidAfter = props.tokenValidAfter;
   }
@@ -56,6 +59,10 @@ export class User extends BaseEntity {
 
   get role(): UserRole {
     return this._role;
+  }
+
+  get companyId(): string {
+    return this._companyId;
   }
 
   get avatarUrl(): string | undefined {
@@ -131,6 +138,7 @@ export class User extends BaseEntity {
       name: this._name,
       email: this._email,
       role: this._role,
+      companyId: this._companyId,
       avatarUrl: this._avatarUrl,
       active: this._active,
       createdAt: this._createdAt,

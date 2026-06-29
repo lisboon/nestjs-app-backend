@@ -1,4 +1,4 @@
-import { IsEmail, IsEnum, IsNotEmpty, Length } from "class-validator";
+import { IsEmail, IsEnum, IsNotEmpty, IsUUID, Length } from "class-validator";
 import { Notification } from "@/modules/@shared/domain/entity/validators/notification";
 import { ClassValidatorFields } from "@/modules/@shared/domain/entity/validators/class-validator-fields";
 import { UserRole } from "@/modules/@shared/domain/enums";
@@ -31,6 +31,12 @@ export class UserRules {
     groups: ["create", "role", "update"],
   })
   role: UserRole;
+
+  @IsUUID(4, {
+    message: "Invalid company id",
+    groups: ["create", "companyId"],
+  })
+  companyId: string;
 
   constructor(data: User) {
     Object.assign(this, data.toJSON());

@@ -1,4 +1,11 @@
-import { IsEmail, IsEnum, IsOptional, IsString, Length } from "class-validator";
+import {
+  IsEmail,
+  IsEnum,
+  IsOptional,
+  IsString,
+  IsUUID,
+  Length,
+} from "class-validator";
 import BaseUseCase from "@/modules/@shared/usecase/base.usecase";
 import { UserRole } from "@/modules/@shared/domain/enums";
 
@@ -16,6 +23,9 @@ export class CreateUserUseCaseInputDto {
   @IsEnum(UserRole, { message: "Invalid role" })
   role: UserRole;
 
+  @IsUUID(4, { message: "Invalid company id" })
+  companyId: string;
+
   @IsOptional()
   @IsString({ message: "AvatarUrl must be a string" })
   avatarUrl?: string;
@@ -26,6 +36,7 @@ export interface CreateUserUseCaseOutputDto {
   name: string;
   email: string;
   role: UserRole;
+  companyId: string;
   avatarUrl?: string;
   active: boolean;
   createdAt: Date;

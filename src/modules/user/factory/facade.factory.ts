@@ -3,6 +3,7 @@ import { PrismaTransactionManager } from "@/infra/database/prisma-transaction.ma
 import { BcryptPasswordHashService } from "@/infra/services/bcrypt-password-hash.service";
 import { JwtTokenServiceImpl } from "@/infra/services/jwt-token.service";
 import UserRepository from "../repository/user.repository";
+import CompanyRepository from "@/modules/company/repository/company.repository";
 import LoginUseCase from "../usecase/login/login.usecase";
 import ValidateSessionUseCase from "../usecase/validate-session/validate-session.usecase";
 import FindUserByIdUseCase from "../usecase/find-by-id/find-by-id.usecase";
@@ -16,6 +17,7 @@ import UserFacade from "../facade/user.facade";
 export default class UserFacadeFactory {
   static create(): UserFacade {
     const userRepository = new UserRepository(prisma);
+    const companyRepository = new CompanyRepository(prisma);
     const transactionManager = new PrismaTransactionManager(prisma);
     const passwordHashService = new BcryptPasswordHashService();
     const jwtTokenService = new JwtTokenServiceImpl();
@@ -25,7 +27,11 @@ export default class UserFacadeFactory {
       new ValidateSessionUseCase(userRepository),
       new FindUserByIdUseCase(userRepository),
       new FindAllUsersUseCase(userRepository),
-      new CreateUserUseCase(userRepository, passwordHashService),
+      new CreateUserUseCase(
+        userRepository,
+        passwordHashService,
+        companyRepository,
+      ),
       new UpdateUserUseCase(transactionManager, userRepository),
       new ChangePasswordUseCase(userRepository, passwordHashService),
       new DeleteUserUseCase(transactionManager, userRepository),

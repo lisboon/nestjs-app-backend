@@ -34,10 +34,19 @@ src/
 │   ├── @shared/            # base entity & value objects, domain errors,
 │   │                       # events, validation (Notification), repository
 │   │                       # abstractions, transaction manager interface
-│   └── user/
-│       ├── domain/         # User entity + validators
-│       ├── usecase/        # one class per use case (login, create, update,
-│       │                   # delete, find, change-password, validate-session)
+│   ├── user/               # auth + user CRUD (a User belongs to one Company)
+│   │   ├── domain/         # User entity + validators
+│   │   ├── usecase/        # one class per use case (login, create, update,
+│   │   │                   # delete, find, change-password, validate-session)
+│   │   ├── gateway/        # repository interface (the port)
+│   │   ├── repository/     # Prisma adapter + query builder
+│   │   ├── facade/         # module entry point
+│   │   └── factory/        # dependency wiring
+│   └── company/            # company CRUD; a User belongs to one Company (1:N)
+│       ├── domain/         # Company entity + validators
+│       ├── usecase/        # create, find, update, delete (with cross-aggregate
+│       │                   # rules: a user needs a valid company, and a company
+│       │                   # with active users cannot be deleted)
 │       ├── gateway/        # repository interface (the port)
 │       ├── repository/     # Prisma adapter + query builder
 │       ├── facade/         # module entry point
@@ -54,6 +63,11 @@ Some decisions behind the structure:
 - Validation runs through a `Notification` object instead of throwing on the first error, so an entity can report every invalid field at once.
 - Each use case is a single class behind an interface, composed by a facade and wired in a factory, which keeps the controllers thin.
 - Auth is strict on purpose. Session validation reads the role from the database instead of trusting the token, changing a password invalidates tokens issued before the change (`tokenValidAfter`), and the login route has a tighter rate limit than the rest.
+
+A couple of honest trade-offs worth naming:
+
+- The ceremony (a use case, DTO, gateway, repository, facade and factory per operation) is deliberately expensive for a plain CRUD. The payoff (testability and a replaceable framework) only shows up as the domain grows. That is why `Company` and its 1:N link to `User` are here: to show the structure holding across a second, related aggregate instead of a single isolated entity. For one small entity it would be overkill, and that is fine to admit.
+- `validate-session` hits the database on every request on purpose, so a revoked or demoted user loses access immediately. At higher traffic a Redis cache keyed by user and busted through `tokenValidAfter` would cut that load. It is left out on purpose: this is a template, and the extra infrastructure does not pay for itself yet.
 
 ## Stack
 

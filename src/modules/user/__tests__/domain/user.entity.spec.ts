@@ -7,6 +7,7 @@ const validProps = () => ({
   email: "maria.souza@backend.com.br",
   password: "$2b$12$hashedpassword",
   role: UserRole.EDITOR,
+  companyId: "c0000000-0000-4000-8000-000000000000",
 });
 
 describe("User", () => {
@@ -52,6 +53,17 @@ describe("User", () => {
       expect(() =>
         User.create({ ...validProps(), role: "SUPREME" as UserRole }),
       ).toThrow(EntityValidationError);
+    });
+
+    it("throws EntityValidationError when companyId is not a valid uuid", () => {
+      expect(() =>
+        User.create({ ...validProps(), companyId: "not-a-uuid" }),
+      ).toThrow(EntityValidationError);
+    });
+
+    it("exposes companyId", () => {
+      const user = User.create(validProps());
+      expect(user.companyId).toBe("c0000000-0000-4000-8000-000000000000");
     });
   });
 
@@ -130,6 +142,7 @@ describe("User", () => {
         name: "Maria Souza",
         email: "maria.souza@backend.com.br",
         role: UserRole.EDITOR,
+        companyId: "c0000000-0000-4000-8000-000000000000",
         active: true,
       });
     });

@@ -34,10 +34,19 @@ src/
 │   ├── @shared/            # base entity & value objects, erros de domínio,
 │   │                       # eventos, validação (Notification), abstrações
 │   │                       # de repositório, interface de transaction manager
-│   └── user/
-│       ├── domain/         # entidade User + validators
-│       ├── usecase/        # uma classe por caso de uso (login, create, update,
-│       │                   # delete, find, change-password, validate-session)
+│   ├── user/               # auth + CRUD de User (um User pertence a uma Company)
+│   │   ├── domain/         # entidade User + validators
+│   │   ├── usecase/        # uma classe por caso de uso (login, create, update,
+│   │   │                   # delete, find, change-password, validate-session)
+│   │   ├── gateway/        # interface do repositório (a port)
+│   │   ├── repository/     # adapter do Prisma + query builder
+│   │   ├── facade/         # ponto de entrada do módulo
+│   │   └── factory/        # montagem das dependências
+│   └── company/            # CRUD de Company; um User pertence a uma Company (1:N)
+│       ├── domain/         # entidade Company + validators
+│       ├── usecase/        # create, find, update, delete (com regras cross-
+│       │                   # agregado: um user precisa de company válida, e uma
+│       │                   # company com users ativos não pode ser deletada)
 │       ├── gateway/        # interface do repositório (a port)
 │       ├── repository/     # adapter do Prisma + query builder
 │       ├── facade/         # ponto de entrada do módulo
@@ -54,6 +63,11 @@ Algumas decisões por trás da estrutura:
 - A validação passa por um objeto `Notification` em vez de lançar erro no primeiro problema, então a entidade reporta todos os campos inválidos de uma vez.
 - Cada caso de uso é uma classe única atrás de uma interface, composta por um facade e montada numa factory, o que mantém os controllers enxutos.
 - A autenticação é rígida de propósito. A validação de sessão lê o role do banco em vez de confiar no token, trocar a senha invalida os tokens emitidos antes da troca (`tokenValidAfter`), e a rota de login tem um rate limit mais apertado que o resto.
+
+Dois trade-offs que vale a pena assumir com sinceridade:
+
+- A cerimônia (um caso de uso, DTO, gateway, repositório, facade e factory por operação) é cara de propósito para um CRUD simples. O retorno (testabilidade e framework substituível) só aparece conforme o domínio cresce. Por isso `Company` e seu vínculo 1:N com `User` estão aqui: para mostrar a estrutura se sustentando num segundo agregado relacionado, em vez de uma entidade isolada. Para uma única entidade pequena seria exagero, e tudo bem reconhecer isso.
+- O `validate-session` lê o banco a cada request de propósito, para que um usuário revogado ou rebaixado perca o acesso na hora. Em tráfego maior, um cache Redis por usuário invalidado via `tokenValidAfter` reduziria essa carga. Foi deixado de fora de propósito: isto é um template, e a infra extra ainda não se paga.
 
 ## Stack
 

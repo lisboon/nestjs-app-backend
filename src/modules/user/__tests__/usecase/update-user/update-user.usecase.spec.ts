@@ -11,6 +11,7 @@ const makeUser = (overrides: Partial<Parameters<typeof User.create>[0]> = {}) =>
     email: "maria@backend.com.br",
     password: "$2b$12$hash",
     role: UserRole.EDITOR,
+    companyId: "c0000000-0000-4000-8000-000000000000",
     ...overrides,
   });
 
@@ -110,5 +111,18 @@ describe("UpdateUserUseCase", () => {
     await useCase.execute({ id: user.id, active: false });
 
     expect(transactionManager.execute).not.toHaveBeenCalled();
+  });
+
+  it("never changes companyId (it is immutable after creation)", async () => {
+    const { useCase, user } = makeSut();
+    const originalCompanyId = user.companyId;
+
+    const output = await useCase.execute({
+      id: user.id,
+      name: "Maria Oliveira",
+    });
+
+    expect(output.companyId).toBe(originalCompanyId);
+    expect(user.companyId).toBe(originalCompanyId);
   });
 });
