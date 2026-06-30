@@ -1,7 +1,7 @@
 {
   "name": "nestjs-clean-architecture",
   "version": "0.0.1",
-  "description": "",
+  "description": "NestJS + Clean Architecture backend starter",
   "author": "Lisboon",
   "private": true,
   "license": "MIT",
